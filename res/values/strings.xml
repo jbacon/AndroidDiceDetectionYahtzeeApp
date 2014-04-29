@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Application Strings -->
+    <string name="app_name">Dice Detector</string>
+
+    
+    <!--  MainActivity Strings -->
+    <string name="action_settings">Settings</string>
+    <string name="preview_resolution">Preview Resolution</string>
+    <string name="picture_resolution">Picture Resolution</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_detection_method">Detection Method</string>
+    <string name="color_contrast_method">Color Filtering</string>
+    <string name="color_contrast_descrpt">Filters out all but black colors\nDetects contours and ellipses</string>
+    <string name="noise_reduction_method">Noise Reduction</string>
+    <string name="noise_reduction_descrpt">Image noise reduction\nDetects contours and ellipses</string>
+    <string name="hough_method">Hough Circle Method</string>
+    <string name="hough_descrpt">Hough Circle Detection\nUses Canny Edge detection</string>
+    <string name="detection_text_view">Detected Dice</string>
+    <string name="action_accept">Accept</string>
+    <string name="action_retry">Retry</string>
+    <string name="filter_mode">Filter Modes</string>
+    <string name="filter_color_descrpt">Applies color filtering to the\ndetection mode</string>
+    <string name="filter_color">Color Filtering</string>
+    <string name="filter_out_dark">Filter out Dark</string>
+    <string name="filter_out_dark_descrpt">Best when used\nin dark environment</string>
+    <string name="filter_out_bright">Filter out Bright</string>
+    <string name="filter_out_bright_descrpt">Best when used\nin bright environment</string>
+    <string name="filter_noise">Noise Filtering</string>
+    <string name="filter_noise_descrpt">Applies noise filtering to the\ndetection mode</string>
+
+    <string name="detection_method">Detection Method</string>
+
+
+    <!--  UIActivity Strings -->
+    <string name="last_roll">Last Roll</string>
+    <string name="aces">Aces</string>
+    <string name="twos">Twos</string>
+    <string name="threes">Threes</string>
+    <string name="fours">Fours</string>
+    <string name="fives">Fives</string>
+    <string name="sixes">Sixes</string>
+    <string name="total">Total Score</string>
+    <string name="bonus">Bonus</string>
+    <string name="upper">Upper Total</string>
+    <string name="kind3">\t\t3 of a Kind</string>
+    <string name="kind4">\t\t4 of a Kind</string>
+    <string name="fullHouse">\t\tFull House</string>
+    <string name="smStraight">\t\tSm. Straight</string>
+    <string name="lgStraight">\t\tLg. Straight</string>
+    <string name="chance">\t\tChance</string>
+    <string name="yahtzee">\t\tYahtzee</string>
+    <string name="lower">\t\tLower Total</string>
+    <string name="grand">\t\tGrand Total: </string>  
+
+</resources>
