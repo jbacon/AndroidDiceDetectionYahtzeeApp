@@ -4,17 +4,16 @@
     tools:context="com.example.dicedetectorapp.MainActivity" >
 
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/item_settings"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
+        android:title="@string/item_settings"
         android:showAsAction="always" />
     	<menu>
     	    <item
-    	        android:id="@+id/action_preview_resolutions"
-    	        android:title="@string/preview_resolution"
+    	        android:id="@+id/item_preview_resolution"
+    	        android:title="@string/item_preview_resolution"
     	        android:showAsAction="always">
-    	        <menu
-    	            android:id="@+id/submenu_preview_resolutions">
+    	        <menu>
     	            <!-- Filled Programmically, placeholder required -->
     	            <item
     	                android:id="@+id/placeholderItem">
@@ -22,75 +21,103 @@
     	        </menu>
     	    </item>
     	    <item 
-    	        android:id="@+id/action_filter_mode"
-    	        android:title="@string/filter_mode"
+    	        android:id="@+id/item_filter_mode"
+    	        android:title="@string/item_filter_mode"
     	        android:showAsAction="always">
     	        <menu>
     	            <group
-    	                android:id="@+id/submenu_filters"
-    	                android:checkableBehavior="all" >
+    	                android:id="@+id/group_filter_mode">
     	                <item
-    	                    android:id="@+id/filter_color"
-    	                    android:title="@string/filter_color" 
-    	                    android:contentDescription="@string/filter_color_descrpt">
+    	                    android:id="@+id/item_filter_color"
+    	                    android:title="@string/item_filter_color" 
+    	                    android:contentDescription="@string/item_filter_color_descrpt">
     	                    <menu>
-    	                        <group 
-    	                            android:id="@+id/submenu_filter_color"
+    	                        <group
+    	                            android:id="@+id/group_filter_color_mode"
     	                        	android:checkableBehavior="single">
     	                        	<item
-    	                        	    android:id="@+id/filter_out_dark"
-    	                        	    android:title="@string/filter_out_dark"
-    	                        	    android:contentDescription="@string/filter_out_dark_descrpt"
-    	                        	    android:checked="false" >
+    	                        	    android:id="@+id/item_filter_out_dark"
+    	                        	    android:title="@string/item_filter_out_dark"
+    	                        	    android:contentDescription="@string/item_filter_out_dark_descrpt" 
+    	                        	    android:checked="false"
+    	                        	    android:onClick="onOptionsItemSelected">
     	                        	</item>
     	                        	<item
-    	                        	    android:id="@+id/filter_out_bright"
-    	                        	    android:title="@string/filter_out_bright"
-    	                        	    android:contentDescription="@string/filter_out_bright_descrpt"
-    	                        	    android:checked="false" >
+    	                        	    android:id="@+id/item_filter_out_bright"
+    	                        	    android:title="@string/item_filter_out_bright"
+    	                        	    android:contentDescription="@string/item_filter_out_bright_descrpt" 
+    	                        	    android:checked="false"
+    	                        	    android:onClick="onOptionsItemSelected">
+    	                        	</item>
+    	                        	<item 
+    	                        	    android:id="@+id/item_filter_color_no"
+    	                        	    android:title="@string/item_filter_color_no"
+    	                        	    android:checked="true"
+    	                        	    android:onClick="onOptionsItemSelected">
     	                        	</item>
     	                    	</group>
     	                    </menu>
     	                </item>
     	                <item
-    	                    android:id="@+ID/filter_noise"
-    	                    android:title="@string/filter_noise"
-    	                    android:contentDescription="@string/filter_noise_descrpt" 
+    	                    android:id="@+id/item_filter_noise"
+    	                    android:title="@string/item_filter_noise"
+    	                    android:contentDescription="@string/item_filter_noise_descrpt" 
+    	                    android:checkable="true"
     	                    android:checked="true">
     	                </item>
     	            </group>
     	        </menu>
     	    </item>
     	    <item 
-    	        android:id="@+id/action_detection_method"
-       			android:title="@string/detection_method"
+    	        android:id="@+id/item_detection_method"
+       			android:title="@string/item_detection_method"
        			android:showAsAction="always">
     	        <menu>
     	            <group 
-    	            	android:id="@+id/submenu_detection_method"
+    	            	android:id="@+id/group_detection_method"
     	            	android:checkableBehavior="single" >
 	    	            <item
-	    	                android:id="@+id/color_contrast_method"
-	    	                android:title="@string/color_contrast_method"
-	    	                android:contentDescription="@string/color_contrast_descrpt">
+	    	                android:id="@+id/item_contour_method"
+	    	                android:title="@string/item_contour_method"
+	    	                android:contentDescription="@string/item_contour_method_descrpt"
+	    	           		android:checked="true">
 	    	            </item>
 	    	            <item
-	    	                android:id="@+id/noise_reduction_method"
-	    	                android:title="@string/noise_reduction_method"
-	    	                android:contentDescription="@string/noise_reduction_descrpt" >
-	    	            </item>
-	    	            <item
-	    	                android:id="@+id/hough_method"
-	    	                android:title="@string/hough_method"
-	    	                android:contentDescription="@string/hough_descrpt" >
+	    	                android:id="@+id/item_hough_method"
+	    	                android:title="@string/item_hough_method"
+	    	                android:contentDescription="@string/item_hough_method_descrpt"
+	    	           		android:checked="false">
 	    	            </item>
 	    	        </group>
     	        </menu>
     	    </item>
+    	    <item 
+    	        android:id="@+id/item_view_mode"
+    	        android:title="@string/item_view_mode"
+    	        android:showAsAction="always">
+    	        <menu>
+    	            <group
+    	                android:id="@+id/group_view_mode"
+    	                android:checkableBehavior="single">
+    	                <item
+    	                    android:id="@+id/item_normal_view_mode"
+    	                    android:title="@string/item_normal_view_mode"
+    	                    android:contentDescription="@string/item_normal_view_mode_descrpt"
+    	                    android:checked="true">
+    	                </item>
+    	                <item
+    	                    android:id="@+id/item_detection_view_mode"
+    	                    android:title="@string/item_detection_view_mode"
+    	                    android:contentDescription="@string/item_detection_view_mode_descrpt"
+    	                    android:checked="false">
+    	                </item>
+    	            </group>
+    	        </menu>
+    	    </item>
     	</menu>
     <item
-        android:id="@+id/action_cancel"
+        android:id="@+id/item_cancel"
         android:showAsAction="always"
-        android:title="@string/action_cancel">
+        android:title="@string/item_cancel">
     </item>
 </menu>

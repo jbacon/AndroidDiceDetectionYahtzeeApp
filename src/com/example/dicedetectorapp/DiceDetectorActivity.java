@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.Semaphore;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
@@ -42,6 +43,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.os.Build;
+import android.provider.Telephony.Threads;
 
 public class DiceDetectorActivity extends Activity implements CvCameraViewListener2, View.OnClickListener, View.OnTouchListener {
 
@@ -59,6 +61,7 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
     private AlertDialog.Builder dialogBuilderPreview;
 	private ArrayAdapter<String> previewAdapter;
 	private AlertDialog			previewResolutionSelector;
+	private Semaphore			semaphore;
 	
 	//Instance Variables for UiHider
 	private SystemUiHider 			mSystemUiHider;
@@ -70,30 +73,30 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 	
 	//Instance Variables for detectDice()
 	private static boolean		filterByColor = false;
-	private static boolean 	filterByNoise = true;
+	private static boolean 		filterByNoise = true;
 	private static boolean		contourEllipseMethod = true;
 	private static boolean		houghMethod = false;
+	private boolean				filterOutBrightColors = true;
+	private boolean 			pauseDetection = false;
+	private boolean				normalViewMode = true;
+	
+	//Instance Variables for Menu
+	private int selectedItemId;
+	
 	
 	//Instance Variables for filterByColor()
-	private boolean		filterOutBrightColors = true;
 	private static int	thresholdBrightColors = 180;	//Higher value up to 255 will result in brighterColors
 	private static int 	thresholdDarkColors = 55;		//Lower will result in darker colors
 	private Mat			filterColorIntermediate;
 	private Mat			filterNoiseIntermediate;
 	
 	//Instance Variables for onCameraFrame();
-	private boolean 	pauseDetection = false;
+	private Mat			thresholdIntermediate;
 	private Mat 		gray;
 	private Mat 		rgba;
-	private Mat 		element;
 	private Size 		kSize;
 	private int 		size;
 	private Point 		anchorPoint;
-	private Mat 		gaussianIntermediate;
-	private Mat 		convertIntermediate;
-	private Mat 		dilateIntermediate;
-	private Mat 		erodeIntermediate;
-	private Mat 		thresholdIntermediate;
 	private RotatedRect	ellipseRotRect;	//Used for ellipse filtering
 	private double 		maxPipThreshold = 1.18;
 	private double 		minPipThreshold = .82;
@@ -102,7 +105,6 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 	private double 		minPipAreaRatioThreshold = .0005;
 	private double 		minPipArea;
 	private Scalar 		color;
-	
 
 	
 	//Instance Variables for findingDiceValues()
@@ -188,10 +190,58 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-
+		super.onCreateOptionsMenu(menu);
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.menu_activity_dice_detector, menu);
 		return true;
+	}
+	
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		super.onPrepareOptionsMenu(menu);
+		
+		switch(selectedItemId) {
+		case R.id.item_filter_out_bright:	
+			MenuItem filterBright = menu.findItem(R.id.item_filter_out_bright);
+			filterBright.setChecked(filterOutBrightColors);	
+			Log.e(TAG, "onPrepareOptionsMenu change item_filter_out_bright");
+			break;
+		case R.id.item_filter_out_dark:		
+			MenuItem filterDark = menu.findItem(R.id.item_filter_out_dark);
+			filterDark.setChecked(filterByColor && !filterOutBrightColors);		
+			Log.e(TAG, "onPrepareOptionsMenu change item_filter_out_dark");
+			break;
+		case R.id.item_filter_color_no:		
+			MenuItem noFilterColor = menu.findItem(R.id.item_filter_color_no);
+			noFilterColor.setChecked(!filterByColor);		
+			Log.e(TAG, "onPrepareOptionsMenu change item_filter_color_no");
+			break;
+		case R.id.item_filter_noise:		
+			MenuItem filterNoise = menu.findItem(R.id.item_filter_noise);
+			filterNoise.setChecked(filterByNoise);				
+			Log.e(TAG, "onPrepareOptionsMenu change item_filter_noise");
+			break;
+		case R.id.item_hough_method:	
+			MenuItem houghMethod = menu.findItem(R.id.item_hough_method);
+			houghMethod.setChecked(this.houghMethod);						
+			Log.e(TAG, "onPrepareOptionsMenu change item_hough_method");
+			break;
+		case R.id.item_contour_method:		
+			MenuItem contourMethod = menu.findItem(R.id.item_contour_method);
+			contourMethod.setChecked(contourEllipseMethod);							
+			Log.e(TAG, "onPrepareOptionsMenu change item_contour_method");
+			break;
+		case R.id.item_normal_view_mode:
+			MenuItem normalViewMode = menu.findItem(R.id.item_normal_view_mode);
+			normalViewMode.setChecked(this.normalViewMode);
+			Log.e(TAG, "onPrepareOptionsMenu change item_normal_view_mode");
+			break;
+		case R.id.item_detection_view_mode:
+			MenuItem detectViewMode = menu.findItem(R.id.item_detection_view_mode);
+			detectViewMode.setChecked(!this.normalViewMode);
+			Log.e(TAG, "onPrepareOptionsMenu change item_detection_view_mode");
+		}
+		return super.onPrepareOptionsMenu(menu);
 	}
 	
 	@Override
@@ -199,26 +249,80 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
+		selectedItemId = item.getItemId();
 		switch(item.getItemId()) {
-			case R.id.action_cancel:
-				finish();
-				break;
-			case R.id.action_preview_resolutions:
+			case R.id.item_preview_resolution:
 				previewResolutionSelector.show();
 				break;
-			case R.id.color_contrast_method:
+			case R.id.item_cancel:
+				finish();
 				break;
-			case R.id.filter_out_bright:
+			case R.id.item_filter_out_bright:
+				Log.e(TAG,"item_filter_out_bright fired onOptionsItemSelected");
+				if(!item.isChecked()){
+					filterByColor = true;
+					filterOutBrightColors = true;
+				}
+				invalidateOptionsMenu();
 				break;
-			case R.id.filter_out_dark:
+			case R.id.item_filter_out_dark:
+				Log.e(TAG,"item_filter_out_dark fired onOptionsItemSelected");
+				if(!item.isChecked()){
+					filterByColor = true;
+					filterOutBrightColors = false;
+				}
+				invalidateOptionsMenu();
 				break;
-			case R.id.noise_reduction_method:
+			case R.id.item_filter_color_no:
+				Log.e(TAG,"item_filter_color_no fired onOptionsItemSelected");
+				if(!item.isChecked()) {
+					filterByColor = false;
+					filterOutBrightColors = false;
+				}
+				invalidateOptionsMenu();
 				break;
-			case R.id.hough_method:
+			case R.id.item_filter_noise:
+				Log.e(TAG,"item_filter_noise fired onOptionsItemSelected");
+				if(!item.isChecked()) {
+					filterByNoise = true;
+				}
+				else
+					filterByNoise = false;
+				invalidateOptionsMenu();
 				break;
-			case R.id.action_settings:
+			case R.id.item_hough_method:
+				Log.e(TAG,"item_hough_method fired onOptionsItemSelected");
+				if(!item.isChecked()){
+					houghMethod = true;
+					contourEllipseMethod = false;
+				}
+				invalidateOptionsMenu();
+				break;
+			case R.id.item_contour_method:
+				Log.e(TAG,"item_contour_method fired onOptionsItemSelected");
+				if(!item.isChecked()){
+					houghMethod = false;
+					contourEllipseMethod = true;
+				}
+				invalidateOptionsMenu();
+				break;
+			case R.id.item_normal_view_mode:
+				Log.e(TAG, "onOptionsItemSelected fired by item_normal_view_mode");
+				if(!normalViewMode) {
+					normalViewMode = true;
+				}
+				invalidateOptionsMenu();
+				break;
+			case R.id.item_detection_view_mode:
+				Log.e(TAG, "onOptionsItemSelected fired by item_detection_view_mode");
+				if(normalViewMode) {
+					normalViewMode = false;
+				}
+				invalidateOptionsMenu();
 				break;
 		}
+
+		
 		return super.onOptionsItemSelected(item);
 	}
 	
@@ -269,6 +373,8 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 	 * Several matrix' objects are created for use in onCameraFrame();
 	 */
 	public void onCameraViewStarted(int width, int height) {
+		filterColorIntermediate = new Mat();
+		filterNoiseIntermediate = new Mat();
 		maxPipArea = (width * height) * maxPipAreaRatioThreshold;
 		minPipArea = (width * height) * minPipAreaRatioThreshold;
 		size = height/200;	//Bigger size means bigger kernal size and more erosion/dilation
@@ -318,22 +424,23 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 		if(!pauseDetection) {
 			detectDice();
 		}
-		return rgba;
+		if(normalViewMode)
+			return rgba;
+		else
+			return thresholdIntermediate;
 	}
 	
 	private void detectDice() {
-		if(filterByColor) {
+		if(filterByColor)
 			filterByColor();
-		}
-		if(filterByNoise) {
+		if(filterByNoise)
 			filterByNoise();
-		}
-		if(houghMethod) {
+		if(houghMethod)
 			houghCircleDetection();
-		}
-		else if(contourEllipseMethod) {
+		else if(contourEllipseMethod)
 			contourEllipseDetection();
-		}
+		else
+			contourEllipseDetection();
 		if(frameCount%80 == 0) {
 			//finalDiceValueList.clear();
 			finalDiceValueList.clear();
@@ -467,7 +574,7 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 		Mat rgb2 = new Mat();
 		if(filterOutBrightColors)
 			Core.inRange(rgb, new Scalar(0, 0, 0), new Scalar(thresholdDarkColors, thresholdDarkColors, thresholdDarkColors), rgb2);
-		else
+		else 
 			Core.inRange(rgb, new Scalar(thresholdBrightColors, thresholdBrightColors, thresholdBrightColors), new Scalar(255, 255, 255), rgb2);
 		Imgproc.cvtColor(rgb2, filterColorIntermediate, Imgproc.COLOR_RGB2RGBA);
 	}
@@ -484,7 +591,7 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 			Imgproc.GaussianBlur(gray, gaussianIntermediate, new Size(size*2 + 1, size*2+1), 4);
 		Mat dilateIntermediate = new Mat();
 		Imgproc.dilate(gaussianIntermediate, dilateIntermediate, element); //DiceObject dissed4appear further away from camera
-		Imgproc.erode(dilateIntermediate,filterNoiseIntermediate,element);	//DiceObject seen from further away
+		Imgproc.erode(dilateIntermediate,filterNoiseIntermediate, element);	//DiceObject seen from further away
 	}
 	
 	//Uses Canny Edge detection and the Hough algorithm to detect circle 
@@ -501,7 +608,7 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 	//	to the contour .
 	//General ellipse filtering then determines which ellipse are the Dice pips
 	private void contourEllipseDetection() {
-		Mat thresholdIntermediate = new Mat();
+		thresholdIntermediate = new Mat();
 		if(filterByColor) 
 			Imgproc.threshold(filterColorIntermediate, thresholdIntermediate, 0, 255, Imgproc.THRESH_BINARY|Imgproc.THRESH_OTSU);
 		else if(filterByNoise)

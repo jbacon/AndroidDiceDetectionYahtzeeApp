@@ -6,33 +6,36 @@
 
     
     <!--  MainActivity Strings -->
-    <string name="action_settings">Settings</string>
-    <string name="preview_resolution">Preview Resolution</string>
-    <string name="picture_resolution">Picture Resolution</string>
-    <string name="action_cancel">Cancel</string>
-    <string name="action_detection_method">Detection Method</string>
-    <string name="color_contrast_method">Color Filtering</string>
-    <string name="color_contrast_descrpt">Filters out all but black colors\nDetects contours and ellipses</string>
-    <string name="noise_reduction_method">Noise Reduction</string>
-    <string name="noise_reduction_descrpt">Image noise reduction\nDetects contours and ellipses</string>
-    <string name="hough_method">Hough Circle Method</string>
-    <string name="hough_descrpt">Hough Circle Detection\nUses Canny Edge detection</string>
-    <string name="detection_text_view">Detected Dice</string>
-    <string name="action_accept">Accept</string>
-    <string name="action_retry">Retry</string>
-    <string name="filter_mode">Filter Modes</string>
-    <string name="filter_color_descrpt">Applies color filtering to the\ndetection mode</string>
-    <string name="filter_color">Color Filtering</string>
-    <string name="filter_out_dark">Filter out Dark</string>
-    <string name="filter_out_dark_descrpt">Best when used\nin dark environment</string>
-    <string name="filter_out_bright">Filter out Bright</string>
-    <string name="filter_out_bright_descrpt">Best when used\nin bright environment</string>
-    <string name="filter_noise">Noise Filtering</string>
-    <string name="filter_noise_descrpt">Applies noise filtering to the\ndetection mode</string>
-
-    <string name="detection_method">Detection Method</string>
-
-
+    <string name="text_detected_dice">Detected Dice!</string>
+    <string name="item_accept">Accept</string>
+    <string name="item_retry">Retry</string>
+    
+    <!--  MainActivity Menu Strings -->
+    <string name="item_settings">Settings</string>
+    <string name="item_cancel">Cancel</string>
+    <string name="item_preview_resolution">Preview Resolutions</string>
+    <string name="item_filter_mode">Filter Modes</string>
+    <string name="item_filter_color">Filter by Color</string>
+    <string name="item_filter_color_descrpt">Filter by Colors</string>
+    <string name="item_filter_color_no">No Color Filtering</string>
+    <string name="item_filter_out_dark">Filter Dark</string>
+    <string name="item_filter_out_dark_descrpt">Filter out Dark Colors</string>
+    <string name="item_filter_out_bright">Filter Bright</string>
+    <string name="item_filter_out_bright_descrpt">Filter out Bright Colors</string>
+    <string name="item_filter_noise">Filter Noise</string>
+    <string name="item_filter_noise_descrpt">Filter out Noise</string>
+    <string name="item_detection_method">Detection Method</string>
+    <string name="item_hough_method">Hough Detection</string>
+    <string name="item_hough_method_descrpt">Hough Detection</string>
+    <string name="item_contour_method">Contour Detection</string>
+	<string name="item_contour_method_descrpt">Contour Detection</string>
+    <string name="item_view_mode">View Mode</string>
+    <string name="item_normal_view_mode">Normal Mode</string>
+    <string name="item_normal_view_mode_descrpt">RGBA Mode</string>
+    <string name="item_detection_view_mode">Detection Mode</string>
+    <string name="item_detection_view_mode_descrpt">The filtered image\nused for detection</string>
+    
+    
     <!--  UIActivity Strings -->
     <string name="last_roll">Last Roll</string>
     <string name="aces">Aces</string>
@@ -53,5 +56,9 @@
     <string name="yahtzee">\t\tYahtzee</string>
     <string name="lower">\t\tLower Total</string>
     <string name="grand">\t\tGrand Total: </string>  
+    <string name="action_settings">Settings</string>
+
+
+    
 
 </resources>
