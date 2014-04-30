@@ -2,12 +2,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.dicedetectorapp.MainActivity" >
-
     <item
         android:id="@+id/item_settings"
         android:orderInCategory="100"
         android:title="@string/item_settings"
-        android:showAsAction="always" />
+        android:showAsAction="always">
     	<menu>
     	    <item
     	        android:id="@+id/item_preview_resolution"
@@ -115,9 +114,10 @@
     	        </menu>
     	    </item>
     	</menu>
-    <item
+	</item>
+	<item
         android:id="@+id/item_cancel"
-        android:showAsAction="always"
-        android:title="@string/item_cancel">
+        android:title="@string/item_cancel"
+        android:showAsAction="always">
     </item>
 </menu>

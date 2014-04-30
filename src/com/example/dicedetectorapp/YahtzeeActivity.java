@@ -1,13 +1,16 @@
+/**
+ * Authors: Josh Bacon, DJ Corisis, and Derek Bennet
+ * Date: 4/30/14
+ * */
+
 package com.example.dicedetectorapp;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -22,11 +25,14 @@ public class YahtzeeActivity extends Activity implements OnClickListener {
 	
 	private static ArrayList<Integer> diceList = new ArrayList<Integer>();
 	
+	private static boolean hasTurnBeenTaken = false;
+	
 	private static TextView upper;
 	private static TextView totalUpper;
 	private static TextView bonus;
 	private static TextView lower;
 	private static TextView grandTotal;
+	
 	
 	private static ImageButton dice1;
 	private static ImageButton dice2;
@@ -48,29 +54,62 @@ public class YahtzeeActivity extends Activity implements OnClickListener {
 	private static Button yahtzee;
 	private static Button chance;
 	
+	private static int acesScore;
+	private static int twosScore;
+	private static int threesScore;
+	private static int foursScore;
+	private static int fivesScore;
+	private static int sixesScore;
+	private static int kind3Score;
+	private static int kind4Score;
+	private static int fullHouseScore;
+	private static int smStrScore;
+	private static int lgStrScore;
+	private static int yahtzeeScore;
+	private static int chanceScore;
+	
 	private static int upperScore = 0;
 	private static int lowerScore = 0;
+	private static boolean[] activeButtons = new boolean[13];
+
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{	
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_yahtzee_pad);
-		
-		Bundle extras = getIntent().getExtras();
-		if(extras == null) {
-			Log.e(TAG, "ERROR: Extras are Null");
-			finish();
+		if(savedInstanceState != null){
+			acesScore 	= savedInstanceState.getInt("ACES_SCORE");
+			twosScore 	= savedInstanceState.getInt("TWOS_SCORE");
+			threesScore = savedInstanceState.getInt("THREES_SCORE");
+			foursScore 	= savedInstanceState.getInt("FOURS_SCORE");
+			fivesScore 	= savedInstanceState.getInt("FIVES_SCORE");
+			sixesScore 	= savedInstanceState.getInt("SIXES_SCORE");
+			kind3Score 	= savedInstanceState.getInt("KIND3_SCORE");
+			kind4Score 	= savedInstanceState.getInt("KIND4_SCORE");
+			fullHouseScore = savedInstanceState.getInt("FULLHOUSE_SCORE");
+			smStrScore 	= savedInstanceState.getInt("SMSTR_SCORE");
+			lgStrScore 	= savedInstanceState.getInt("LGSTR_SCORE");
+			yahtzeeScore = savedInstanceState.getInt("YAHTZEE_SCORE");
+			chanceScore = savedInstanceState.getInt("CHANCE_SCORE");
+			
+			upperScore = savedInstanceState.getInt("UPPER_SCORE");
+			lowerScore = savedInstanceState.getInt("LOWER_SCORE");
+			activeButtons = savedInstanceState.getBooleanArray("ACTIVE_BUTTONS");
 		}
 		else {
-			diceList = extras.getIntegerArrayList("DICE_LIST");
+			for(int i = 0; i < 13; i++) {
+				activeButtons[i] = true;
+			}
 		}
+			
+		setContentView(R.layout.activity_yahtzee_pad);
 		
 		dice1 = (ImageButton)findViewById(R.id.dice1);
 		dice2 = (ImageButton)findViewById(R.id.dice2);
 		dice3 = (ImageButton)findViewById(R.id.dice3);
 		dice4 = (ImageButton)findViewById(R.id.dice4);
 		dice5 = (ImageButton)findViewById(R.id.dice5);
+		
 		
 		aces = (Button)findViewById(R.id.acesButton);
 		twos = (Button)findViewById(R.id.twoButton);
@@ -92,10 +131,57 @@ public class YahtzeeActivity extends Activity implements OnClickListener {
 		lower = (TextView)findViewById(R.id.lowerTotal);
 		grandTotal = (TextView)findViewById(R.id.grandTotal);
 		
-		Collections.sort(diceList);
+		if(!diceList.isEmpty()) {
+			Collections.sort(diceList);
+			setButtonImages();	
+			enableButtons();
+		}
+		else {
+			dice1.setImageResource(R.drawable.diceicon);
+			dice2.setImageResource(R.drawable.diceicon);
+			dice3.setImageResource(R.drawable.diceicon);
+			dice4.setImageResource(R.drawable.diceicon);
+			dice5.setImageResource(R.drawable.diceicon);
+		}
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		if(!diceList.isEmpty()) {
+			Collections.sort(diceList);
+			setButtonImages();	
+			enableButtons();
+		}
+		else {
+			dice1.setImageResource(R.drawable.diceicon);
+			dice2.setImageResource(R.drawable.diceicon);
+			dice3.setImageResource(R.drawable.diceicon);
+			dice4.setImageResource(R.drawable.diceicon);
+			dice5.setImageResource(R.drawable.diceicon);
+		}
+	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putInt("ACES_SCORE", acesScore);
+		outState.putInt("TWOS_SCORE", twosScore);
+		outState.putInt("THREES_SCORE", threesScore);
+		outState.putInt("FOURS_SCORE", foursScore);
+		outState.putInt("FIVES_SCORE", fivesScore);
+		outState.putInt("SIXES_SCORE", sixesScore);
+		outState.putInt("KIND3_SCORE", kind3Score);
+		outState.putInt("KIND4_SCORE", kind4Score);
+		outState.putInt("FULLHOUSE_SCORE", fullHouseScore);
+		outState.putInt("SMSTR_SCORE", smStrScore);
+		outState.putInt("LGSTR_SCORE", lgStrScore);
+		outState.putInt("YAHTZEE_SCORE", yahtzeeScore);
+		outState.putInt("CHANCE_SCORE", chanceScore);
 		
-		setButtonImages();
-		enableButtons();
+		outState.putInt("UPPER_SCORE", upperScore);
+		outState.putInt("LOWER_SCORE", lowerScore);
+		outState.putBooleanArray("ACTIVE_BUTTONS", activeButtons);
 	}
 	
 	public static void setButtonImages() { 
@@ -211,6 +297,58 @@ public class YahtzeeActivity extends Activity implements OnClickListener {
 
 	public static void enableButtons()
 	{
+		if(!activeButtons[0]) {
+			aces.setEnabled(false);
+			aces.setText(String.valueOf(acesScore));
+		}
+		if(!activeButtons[1]) {
+			twos.setEnabled(false);
+			twos.setText(String.valueOf(twosScore));
+		}
+		if(!activeButtons[2]) {
+			threes.setEnabled(false);
+			threes.setText(String.valueOf(threesScore));
+		}
+		if(!activeButtons[3]) {
+			fours.setEnabled(false);
+			fours.setText(String.valueOf(foursScore));
+		}
+		if(!activeButtons[4]) {
+			fives.setEnabled(false);
+			fives.setText(String.valueOf(fivesScore));
+		}
+		if(!activeButtons[5]) {
+			sixes.setEnabled(false);
+			sixes.setText(String.valueOf(sixesScore));
+		}
+		if(!activeButtons[6]) {
+			kind3.setEnabled(false);
+			kind3.setText(String.valueOf(kind3Score));
+		}
+		if(!activeButtons[7]) {
+			kind4.setEnabled(false);
+			kind4.setText(String.valueOf(kind4Score));
+		}
+		if(!activeButtons[8]) {
+			fullHouse.setEnabled(false);
+			fullHouse.setText(String.valueOf(fullHouseScore));
+		}
+		if(!activeButtons[9]) {
+			smStr.setEnabled(false);
+			smStr.setText(String.valueOf(smStrScore));
+		}
+		if(!activeButtons[10]) {
+			lgStr.setEnabled(false);
+			lgStr.setText(String.valueOf(lgStrScore));
+		}
+		if(!activeButtons[11]) {
+			yahtzee.setEnabled(false);
+			yahtzee.setText(String.valueOf(yahtzeeScore));
+		}
+		if(!activeButtons[12]) {
+			chance.setEnabled(false);
+			chance.setText(String.valueOf(chanceScore));
+		}
 		int one = 0;
 		int two = 0;
 		int three = 0;
@@ -242,39 +380,45 @@ public class YahtzeeActivity extends Activity implements OnClickListener {
 				break;
 			}
 		}
+		if(activeButtons[0] == true)
+			aces.setText(String.valueOf(one));
+		if(activeButtons[1] == true)
+			twos.setText(String.valueOf(two));
+		if(activeButtons[2] == true)
+			threes.setText(String.valueOf(three));
+		if(activeButtons[3] == true)
+			fours.setText(String.valueOf(four));
+		if(activeButtons[4] == true)
+			fives.setText(String.valueOf(five));
+		if(activeButtons[5] == true)
+			sixes.setText(String.valueOf(six));
 		
-		aces.setText(String.valueOf(one));
-		twos.setText(String.valueOf(two));
-		threes.setText(String.valueOf(three));
-		fours.setText(String.valueOf(four));
-		fives.setText(String.valueOf(five));
-		sixes.setText(String.valueOf(six));
-		
-		if(get3())
+		if(activeButtons[6] && get3())
 		{
 			kind3.setText(String.valueOf(one + two + three + four + five + six));
 		}
-		if(get4())
+		if(activeButtons[7] && get4())
 		{
 			kind4.setText(String.valueOf(one + two + three + four + five + six));
 		}
-		if(getFullHouse())
+		if(activeButtons[8] && getFullHouse())
 		{
 			fullHouse.setText("25");
 		}
-		if(getSmallStraight())
+		if(activeButtons[9] && getSmallStraight())
 		{
 			smStr.setText("30");
 		}
-		if(getLargeStraight())
+		if(activeButtons[10] && getLargeStraight())
 		{
 			lgStr.setText("40");
 		}
-		if(getYahtzee())
+		if(activeButtons[11] && getYahtzee())
 		{
 			yahtzee.setText("50");
 		}
-		chance.setText(String.valueOf(one + two + three + four + five + six));
+		if(activeButtons[12])
+			chance.setText(String.valueOf(one + two + three + four + five + six));
 	}
 	
 	private static Boolean getYahtzee() {
@@ -426,12 +570,18 @@ public class YahtzeeActivity extends Activity implements OnClickListener {
 	}
 	
 	@Override
-	public void startActivityForResult(Intent intent, int requestCode, Bundle options) {
-		
-	}
-	
-	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data){
+		if(requestCode == 1){
+			if(resultCode == RESULT_OK){
+				diceList = data.getIntegerArrayListExtra("DICE_LIST");
+				Log.e(TAG, "GET EXTRA ARRAY"+diceList.toString());
+				hasTurnBeenTaken = false;
+			}
+			if(resultCode == RESULT_CANCELED){
+				diceList.clear();
+				hasTurnBeenTaken = true;
+			}
+		}
 		
 	}
 	
@@ -440,57 +590,113 @@ public class YahtzeeActivity extends Activity implements OnClickListener {
 	{
 		switch(v.getId())
 		{
-		case R.id.acesButton:
-			upperScore += Integer.parseInt(aces.getText().toString());
-			aces.setEnabled(false);
+		case R.id.button_detect_dice:
+			Intent intent = new Intent(this, DiceDetectorActivity.class);
+			startActivityForResult(intent, 1);
+			break;
+		case R.id.acesButton: 
+			if(!hasTurnBeenTaken) {
+				upperScore += Integer.parseInt(aces.getText().toString());
+				aces.setEnabled(false);
+				activeButtons[0] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.twoButton:
-			upperScore += Integer.parseInt(twos.getText().toString());
-			twos.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				upperScore += Integer.parseInt(twos.getText().toString());
+				twos.setEnabled(false);
+				activeButtons[1] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.threeButton:
-			upperScore += Integer.parseInt(threes.getText().toString());
-			threes.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				upperScore += Integer.parseInt(threes.getText().toString());
+				threes.setEnabled(false);
+				activeButtons[2] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.fourButton:
-			upperScore += Integer.parseInt(fours.getText().toString());
-			fours.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				upperScore += Integer.parseInt(fours.getText().toString());
+				fours.setEnabled(false);
+				activeButtons[3] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.fiveButton:
-			upperScore += Integer.parseInt(fives.getText().toString());
-			fives.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				upperScore += Integer.parseInt(fives.getText().toString());
+				fives.setEnabled(false);
+				activeButtons[4] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.sixButton:
-			upperScore += Integer.parseInt(sixes.getText().toString());
-			sixes.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				upperScore += Integer.parseInt(sixes.getText().toString());
+				sixes.setEnabled(false);
+				activeButtons[5] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.kind3Button:
-			lowerScore += Integer.parseInt(kind3.getText().toString());
-			kind3.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				lowerScore += Integer.parseInt(kind3.getText().toString());
+				kind3.setEnabled(false);
+				activeButtons[6] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.kind4Button:
-			lowerScore += Integer.parseInt(kind4.getText().toString());
-			kind4.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				lowerScore += Integer.parseInt(kind4.getText().toString());
+				kind4.setEnabled(false);
+				activeButtons[7] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.fullHouseButton:
-			lowerScore += Integer.parseInt(fullHouse.getText().toString());
-			fullHouse.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				lowerScore += Integer.parseInt(fullHouse.getText().toString());
+				fullHouse.setEnabled(false);
+				activeButtons[8] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.smStrButton:
-			lowerScore += Integer.parseInt(smStr.getText().toString());
-			smStr.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				lowerScore += Integer.parseInt(smStr.getText().toString());
+				smStr.setEnabled(false);
+				activeButtons[9] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.lgStrButton:
-			lowerScore += Integer.parseInt(lgStr.getText().toString());
-			lgStr.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				lowerScore += Integer.parseInt(lgStr.getText().toString());
+				lgStr.setEnabled(false);
+				activeButtons[10] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.yahtzeeButton:
-			lowerScore += Integer.parseInt(yahtzee.getText().toString());
-			yahtzee.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				lowerScore += Integer.parseInt(yahtzee.getText().toString());
+				yahtzee.setEnabled(false);
+				activeButtons[11] = false;
+				hasTurnBeenTaken = true;
+			}
 			break;
 		case R.id.chanceButton:
-			lowerScore += Integer.parseInt(chance.getText().toString());
-			chance.setEnabled(false);
+			if(!hasTurnBeenTaken) {
+				lowerScore += Integer.parseInt(chance.getText().toString());
+				chance.setEnabled(false);
+				activeButtons[12] = false;
+				hasTurnBeenTaken = true;
+			}	
 			break;
 		}
 		
@@ -517,9 +723,9 @@ public class YahtzeeActivity extends Activity implements OnClickListener {
 			
 		}
 		
-		
 		upper.setText(String.valueOf(upperScore));
 		lower.setText(String.valueOf(lowerScore));
+
 	}
 
 }

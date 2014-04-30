@@ -55,8 +55,8 @@
     <string name="chance">\t\tChance</string>
     <string name="yahtzee">\t\tYahtzee</string>
     <string name="lower">\t\tLower Total</string>
-    <string name="grand">\t\tGrand Total: </string>  
-    <string name="action_settings">Settings</string>
+    <string name="grand">\t\tGrand Total: </string>
+    <string name="button_detect_dice">Detect Dice!</string>  
 
 
     

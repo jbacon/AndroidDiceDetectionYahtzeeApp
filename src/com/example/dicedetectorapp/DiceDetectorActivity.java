@@ -1,10 +1,21 @@
+/**
+ * Authors: Josh Bacon, DJ Corisis, and Derek Bennet
+ * Date: 4/30/14
+ * What is it? 
+ * Dice detection using OpenCV and Yahtzee game implementation app.
+ * Description:
+ * 		This activity is the Yahtzee game pad, which gets the camera dice detection for the onActivityResult, and 
+ * 
+ * The focus was more on the dice detection and less on the Yahtzee game, so there could be more features added and a smoother experience
+ */
+
+
 package com.example.dicedetectorapp;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.Semaphore;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
@@ -43,7 +54,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.os.Build;
-import android.provider.Telephony.Threads;
 
 public class DiceDetectorActivity extends Activity implements CvCameraViewListener2, View.OnClickListener, View.OnTouchListener {
 
@@ -61,7 +71,6 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
     private AlertDialog.Builder dialogBuilderPreview;
 	private ArrayAdapter<String> previewAdapter;
 	private AlertDialog			previewResolutionSelector;
-	private Semaphore			semaphore;
 	
 	//Instance Variables for UiHider
 	private SystemUiHider 			mSystemUiHider;
@@ -87,10 +96,9 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 	//Instance Variables for filterByColor()
 	private static int	thresholdBrightColors = 180;	//Higher value up to 255 will result in brighterColors
 	private static int 	thresholdDarkColors = 55;		//Lower will result in darker colors
-	private Mat			filterColorIntermediate;
-	private Mat			filterNoiseIntermediate;
 	
 	//Instance Variables for onCameraFrame();
+	private Mat			intermediate;
 	private Mat			thresholdIntermediate;
 	private Mat 		gray;
 	private Mat 		rgba;
@@ -255,7 +263,9 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 				previewResolutionSelector.show();
 				break;
 			case R.id.item_cancel:
-				finish();
+				Intent returnIntent = new Intent();
+				setResult(RESULT_CANCELED, returnIntent);
+				this.finish();
 				break;
 			case R.id.item_filter_out_bright:
 				Log.e(TAG,"item_filter_out_bright fired onOptionsItemSelected");
@@ -337,9 +347,11 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 			}
 			break;
 		case R.id.action_accept:
-			Intent intent = new Intent(this, YahtzeeActivity.class);
-			intent.putIntegerArrayListExtra("DICE_LIST", finalDiceValueList);
-			this.startActivity(intent);
+			Intent returnIntent = new Intent();
+			Log.e(TAG, "PUT EXTRA ARRAY:"+finalDiceValueList.toString());
+			returnIntent.putIntegerArrayListExtra("DICE_LIST", finalDiceValueList);
+			setResult(RESULT_OK, returnIntent);
+			finish();
 			break;
 		case R.id.action_retry:
 			pauseDetection = false;
@@ -373,8 +385,7 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 	 * Several matrix' objects are created for use in onCameraFrame();
 	 */
 	public void onCameraViewStarted(int width, int height) {
-		filterColorIntermediate = new Mat();
-		filterNoiseIntermediate = new Mat();
+		intermediate = new Mat();
 		maxPipArea = (width * height) * maxPipAreaRatioThreshold;
 		minPipArea = (width * height) * minPipAreaRatioThreshold;
 		size = height/200;	//Bigger size means bigger kernal size and more erosion/dilation
@@ -419,7 +430,7 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 	@Override
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 		frameCount++;
-		gray = inputFrame.gray();
+		intermediate = inputFrame.gray();
 		rgba = inputFrame.rgba();
 		if(!pauseDetection) {
 			detectDice();
@@ -439,8 +450,6 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 			houghCircleDetection();
 		else if(contourEllipseMethod)
 			contourEllipseDetection();
-		else
-			contourEllipseDetection();
 		if(frameCount%80 == 0) {
 			//finalDiceValueList.clear();
 			finalDiceValueList.clear();
@@ -465,106 +474,6 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 			}
 			accumulatedDiceList.clear();
 		}
-		
-		
-		/*
-		//Mat rgb = new Mat();
-		//Imgproc.cvtColor(rgba, rgb, Imgproc.COLOR_RGBA2RGB);
-		//Mat intermediateMedBlur = new Mat();
-		
-		//Imgproc.medianBlur(rgb, intermediateMedBlur, size+1);
-		//dilateIntermediate = new Mat();
-		//element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, kSize, anchorPoint);
-		//Imgproc.dilate(rgb, dilateIntermediate, element); //DiceObject dissed4appear further away from camera
-
-		//Mat rgb2 = new Mat();
-		//Core.inRange(rgb, new Scalar(0, 0, 0), new Scalar(50, 50, 50), rgb2);
-		
-		
-		//Cleanup image for better contour analysis
-		//Uses a separate intermediate Mat for each filter, because it would not work with just one 
-		//intermediate Mat and caused flickering camera preview
-		element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, kSize, anchorPoint);
-		//blurIntermediate = new Mat();
-		//Imgproc.blur(convertIntermediate, blurIntermediate, new Size(size,size));
-		gaussianIntermediate = new Mat();
-		Imgproc.GaussianBlur(gray, gaussianIntermediate, new Size(size*2 + 1, size*2+1), 4);
-		dilateIntermediate = new Mat();
-		Imgproc.dilate(gaussianIntermediate, dilateIntermediate, element); //DiceObject dissed4appear further away from camera
-		erodeIntermediate = new Mat();
-		Imgproc.erode(dilateIntermediate,erodeIntermediate,element);	//DiceObject seen from further away
-		thresholdIntermediate = new Mat();
-		Imgproc.threshold(erodeIntermediate, thresholdIntermediate, 0, 255, Imgproc.THRESH_BINARY|Imgproc.THRESH_OTSU);	
-		List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-		//Find contours of frame and then finds all the 
-		//contours that are "pips" of the DiceObject by using fitEllipse on each contour.
-		Imgproc.findContours(thresholdIntermediate.clone(), contours, new Mat(), Imgproc.RETR_TREE,Imgproc.CHAIN_APPROX_NONE);
-		//Find rotated rectangles and ellipses for each contour
-		for(int i = 0; i < contours.size(); i++) {
-			MatOfPoint2f contourPoints = new MatOfPoint2f(contours.get(i).toArray());
-			if(contourPoints.toArray().length > 5) {
-				ellipseRotRect = Imgproc.fitEllipse(contourPoints);
-				if(ellipseShapeOfPip(ellipseRotRect)) {
-					addToADice(ellipseRotRect);
-					if(addToADice(ellipseRotRect) == true) {
-						Core.ellipse(rgba, ellipseRotRect,  color, 2);
-					}
-				}
-			}
-		}
-		/*
-		//Iterates through DiceObject List and prints text to screen of the most probable actual
-		//face values of the DiceObject (Which are the DiceObject that appear on each frame the
-		//most times within 40 frames
-		if(accumulatedDiceList.size() > 0){
-			for(int i = 0; i < accumulatedDiceList.size(); i++) {
-				DiceObject DiceObject = accumulatedDiceList.get(i);
-				if(accumulatedDiceList.get(i).getNumFramesDetected() > 15) {
-					Core.putText(rgba, "DiceObject: "+DiceObject.getNumPips(), DiceObject.getDiceCenter(), Core.FONT_HERSHEY_PLAIN, (double)2, color, 5);
-				}
-			}
-		}
-		if(frameCount%10 == 0) {
-			for(int i = 0; i < accumulatedDiceList.size(); i++) {
-				if(accumulatedDiceList.get(i).getNumFramesDetected() < 5) {
-					accumulatedDiceList.remove(i);
-				}
-			}
-		}
-		//Every 40 frames detect the DiceObject 
-		if(frameCount%40 == 0) {
-			for(int i = 0; i < accumulatedDiceList.size(); i++) {
-				if(accumulatedDiceList.get(i).getNumFramesDetected() < 20) {
-					accumulatedDiceList.remove(i);
-				}
-			}
-		}
-	
-		if(frameCount%80 == 0) {
-			//finalDiceValueList.clear();
-			finalDiceValueList.clear();
-			//Yahtzee requires 5 DiceObject
-			if(accumulatedDiceList.size() >= 5) {
-				Collections.sort(accumulatedDiceList);
-				//Gets the 5 DiceObject that appear across the most frames
-				for(int i = accumulatedDiceList.size() - 1; i > accumulatedDiceList.size() - 6; i--) {
-					DiceObject DiceObject = accumulatedDiceList.get(i);
-					if(DiceObject.getNumFramesDetected() > 60) {
-						finalDiceValueList.add(DiceObject.getNumPips());
-					}
-					if(finalDiceValueList.size() == 5) {
-						pauseDetection = true;
-						this.runOnUiThread(new Runnable() {
-							public void run() {
-								diceDetected();
-							}
-						});
-					}
-				}
-			}
-			accumulatedDiceList.clear();
-		}
-		*/
 	}
 	
 	//Applies image processing by filtering colors
@@ -576,7 +485,7 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 			Core.inRange(rgb, new Scalar(0, 0, 0), new Scalar(thresholdDarkColors, thresholdDarkColors, thresholdDarkColors), rgb2);
 		else 
 			Core.inRange(rgb, new Scalar(thresholdBrightColors, thresholdBrightColors, thresholdBrightColors), new Scalar(255, 255, 255), rgb2);
-		Imgproc.cvtColor(rgb2, filterColorIntermediate, Imgproc.COLOR_RGB2RGBA);
+		intermediate = rgb2;
 	}
 	
 	//Applies noise reduction techniques to make contours and edge detection
@@ -584,14 +493,10 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 	private void filterByNoise() {
 		Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, kSize, anchorPoint);
 		Mat gaussianIntermediate = new Mat();
-		if(filterByColor){
-			Imgproc.GaussianBlur(filterColorIntermediate, gaussianIntermediate, new Size(size*2 + 1, size*2+1), 4);
-		}
-		else
-			Imgproc.GaussianBlur(gray, gaussianIntermediate, new Size(size*2 + 1, size*2+1), 4);
+		Imgproc.GaussianBlur(intermediate, gaussianIntermediate, new Size(size*2 + 1, size*2+1), 4);
 		Mat dilateIntermediate = new Mat();
-		Imgproc.dilate(gaussianIntermediate, dilateIntermediate, element); //DiceObject dissed4appear further away from camera
-		Imgproc.erode(dilateIntermediate,filterNoiseIntermediate, element);	//DiceObject seen from further away
+		Imgproc.dilate(gaussianIntermediate, dilateIntermediate, element); 
+		Imgproc.erode(dilateIntermediate,intermediate, element);
 	}
 	
 	//Uses Canny Edge detection and the Hough algorithm to detect circle 
@@ -609,18 +514,9 @@ public class DiceDetectorActivity extends Activity implements CvCameraViewListen
 	//General ellipse filtering then determines which ellipse are the Dice pips
 	private void contourEllipseDetection() {
 		thresholdIntermediate = new Mat();
-		if(filterByColor) 
-			Imgproc.threshold(filterColorIntermediate, thresholdIntermediate, 0, 255, Imgproc.THRESH_BINARY|Imgproc.THRESH_OTSU);
-		else if(filterByNoise)
-			Imgproc.threshold(filterNoiseIntermediate, thresholdIntermediate, 0, 255, Imgproc.THRESH_BINARY|Imgproc.THRESH_OTSU);			
-		else
-			Imgproc.threshold(rgba, thresholdIntermediate, 0, 255, Imgproc.THRESH_BINARY|Imgproc.THRESH_OTSU);
-		
+		Imgproc.threshold(intermediate, thresholdIntermediate, 0, 255, Imgproc.THRESH_BINARY|Imgproc.THRESH_OTSU);
 		List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-		//Find contours of frame and then finds all the 
-		//contours that are "pips" of the DiceObject by using fitEllipse on each contour.
 		Imgproc.findContours(thresholdIntermediate.clone(), contours, new Mat(), Imgproc.RETR_TREE,Imgproc.CHAIN_APPROX_NONE);
-		//Find rotated rectangles and ellipses for each contour
 		for(int i = 0; i < contours.size(); i++) {
 			MatOfPoint2f contourPoints = new MatOfPoint2f(contours.get(i).toArray());
 			if(contourPoints.toArray().length > 5) {
